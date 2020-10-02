@@ -10,8 +10,12 @@ class Node:
         self.bandwidthtoday = bandwidth #the bandwidth at the beginning of a day
         self.neighbors = {} #a dict of immediate neighbors addresses and node, distance tuples that will be built before the simulation runs
         self.networkaware_map = {} #a map that the node slowly builds as it gains information about its surroundings
+        
         self.operating = True
         self.notification = ""
+
+        #TODO define a private variable
+        #self.__private = something
 
     #Setup functionality
     def assign_neighbor(self,address,neighbor,distance):
@@ -26,16 +30,17 @@ class Node:
         #check to verify that I haven't already seen this packet before
         if (not packet.name in [packet.name for packet in self.completedpackets]) and (not packet.name in [packet.name for packet in self.packetqueue]):
             self.packetqueue.append(packet) #add packet to queue
+            #add to networkawaremap if it isn't in there already
+
+            #note's the packets distance if it came from someplace farther
             if self.networkaware_map[packet.source]>packet.distance:
                 self.networkaware_map[packet.source] = packet.distanceincrease #update my information about the network map
 
 #Done
     def send_packet(self,destnode,packet,distance):
-        #create deep copy of packet
-        copypacket = packet.copy()
-        #increase packet distance
-        #use neighbor's recieve_packet function
+        copypacket = packet.copy() #create deep copy of packet
         copypacket.distanceincrease(distance)#update packet distance marker
+        copypacket.latesthandler(self)
         destnode.recieve_packet(copypacket)
 
 #Done

@@ -5,6 +5,7 @@ class Packet:
         self.name = idname
         self.destination = destination
         self.timecreated = time
+        self.latesthandler = None
         self.source = source
         self.distance = 0
 

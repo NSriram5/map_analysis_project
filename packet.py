@@ -9,13 +9,16 @@ class Packet:
         self.source = source
         self.distance = 0
 
-    def __copy__(self):
+    def copy(self):
         c = Packet(self.name,self.destination,self.source,self.timecreated,self.load)
         c.distance = self.distance
         return c
     
     def __str__(self):
-        return "Packet:{},From:{},To:{},Sent:{},Distance:{},Load:{}".format(self.name,self.source,self.destination,self.timecreated,self.distance,self.load)
+        return f'Packet:{self.name},From:{self.source},To:{self.destination},Sent:{self.timecreated},Distance:{self.distance},Load:{self.load}'
+
+    def __repr__(self):
+        return f'{self.name},{self.timecreated},{self.source},{self.destination},{self.distance},{self.load}'
 
     def distanceincrease(self,distance):
         self.distance += distance

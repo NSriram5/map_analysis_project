@@ -22,27 +22,60 @@ for node in nodelist:
 
 
 
+
 #Handle Commands
 
 #/Handle Commands/Help
+def print_help():
+    print('Here\'s a list of the current commands that function:')
+    print('run_introduction')
+    print(network_introduction.__doc__)
+    #print('Random Packet Simulation')
+    #print()
 
 #/Handle Commands/NetworkIntroduction
+def every_connect_generator():
+    for node1 in nodelist:
+        for node2 in nodelist:
+            if node1.address != node2.address:
+                yield node1,node2
+introduction_generator = every_connect_generator()
+
+def network_introduction():
+    'This function introduces all of the nodes to one another so that they know how to send packets in the future'
+    while True:
+        try:
+            start,end = next(introduction_generator)
+        except StopIteration:
+            break
+        name = f'{start.address},{end.address},intro,introduction'
+        packet = Packet(name,end.address,start.address,0,0)
+        start.recieve_packet(packet)
+
+        while not all([not bool(node.queue_emptyq()) for node in nodelist]):
+            for node in nodelist:
+                node.process_one_item()
+    
+    for node in nodelist:
+        print(node.networkaware_map)
+        
+
+
 
 #/Handle Commands/Reporting
 
 #Simulation
 
 #/Simulation/Loop
-def sim_loop(nextfunc,endcondfunc):
+def sim_loop(type_of_sim):
     day = 0
-    datalog = ""
-    packet_orders = ""
     end_condition = False
+    datalog = ""
 
     #/Simulation/Helper functs
     def create_packet(sourcestr,recipientstr,load = 1,):
-        name = f'{sourcestr},{recipientstr},{day},{packet_iter}'
         nonlocal packet_iter
+        name = f'{sourcestr},{recipientstr},{day},{packet_iter}'
         packet_iter += 1
         source = list(filter(lambda node:node.address==sourcestr,nodelist))[0]
         recipient = list(filter(lambda node: node.address == recipientstr,nodelist))[0]
@@ -60,7 +93,8 @@ def sim_loop(nextfunc,endcondfunc):
         #collect_notification flags form the map and write to file
         with open("output.txt",'a') as file:
             for node in nodelist:
-                file.write(node.notification)
+                if node.notification != "":
+                    file.write(node.notification)
                 node.newday()
         #Increment day value
         nonlocal day
@@ -69,19 +103,18 @@ def sim_loop(nextfunc,endcondfunc):
 
     while True:
         packet_iter = 0
-        packet_orders = packet_orders.split(",")
-        for order in packet_orders:
-            order = order.split(":")
-            packet_iter += create_packet(order[0],order[1],order[2])
 
-        if endcondfunc == None or end_condition:
+        if end_condition:
             break
         while not check_if_all_exhausted():
             if check_all_node_queues_empty():
-                #something next happens
-                if nextfunc == None:
-                    break
-                elif nextfunc == "end_sim":
+                if type_of_sim == "introduction":
+                    try:
+                        source,destination = next(introduction_generator)
+                        create_packet(source,destination)
+                    except StopIteration:
+                        end_condition = True
+                elif type_of_sim == "random":
                     end_condition = True
                     break
             for node in nodelist:
@@ -98,13 +131,13 @@ while current_command != "exit":
     if inp == "exit":
         break
     elif inp == "run_introduction":
-        #do things
+        print("Running network introduction")
+        network_introduction()
         pass
     elif inp == "run_random":
         #do things
         pass
     elif inp == "help":
-        #do things
-        pass
+        print_help()
     else:
         print("Command not recognized. Please use \"help\" if you're confused about commands")

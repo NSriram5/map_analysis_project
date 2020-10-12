@@ -32,7 +32,7 @@ class Node:
             self.packetqueue.append(packet) #add packet to queue
 
             #If the packet source isn't on the network aware map then add it with the value being the vector it arrived on
-            if not self.networkaware_map.get(packet.source,False):
+            if not self.networkaware_map.get(packet.source,False) and packet.source != self.address:
                 self.networkaware_map[packet.source] = packet.latesthandler #update my information about the network map
 
 #Done
@@ -59,7 +59,7 @@ class Node:
                 #does the node know which vector to send the packet on?
                 elif packet.destination in self.networkaware_map.keys():
                     next_node = self.networkaware_map[packet.destination]
-                    distance = self.neighbors.get(next_node)[1]
+                    distance = self.neighbors.get(next_node.address)[1]
                     self.send_packet(next_node,packet,distance)
                 #am I the recipient of this packet?
                 elif packet.destination == self.address:

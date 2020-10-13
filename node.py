@@ -64,6 +64,7 @@ class Node:
                     self.send_packet(next_node,packet,distance)
                 #am I the recipient of this packet?
                 elif packet.destination == self.address:
+                    print("I found a packet addressed to me!")
                     self.notification += "Packet recieved! --" + str(packet) + "\n"
                 else:
                     #blindly send packet to all neighbors

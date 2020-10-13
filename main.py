@@ -1,6 +1,7 @@
 from node import Node
 from packet import Packet
 import json
+import random
 
 nodelist = []
 
@@ -82,28 +83,42 @@ def network_introduction():
 
 #Simulation
 
+#/Simulation/Helper functs
+SEED = 0
+random.seed(a = SEED)
+def random_packet_maker():
+    '''Yield's a random packet using the global collection nodelist
+    The packet's day and name may need to be updated to make it unique
+    '''
+    step_from_seed = 0
+    while True:
+        choice1 , choice2 = None, None
+        choice1 = random.choice(nodelist)
+        choice2 = random.choice(nodelist)
+        while choice1.address == choice2.address:
+            choice1 = random.choice(nodelist)
+            choice2 = random.choice(nodelist)
+        step_from_seed += 1
+        name = f'{choice1.address},{choice2.address},seed:{step_from_seed}'
+        load = 1
+        packet = Packet(name,choice2.address,choice1.address,0,load)
+        yield packet
+rnd_packet_maker = random_packet_maker()
+
+def check_all_node_queues_empty():
+    "Returns true when all queues in all the nodes of nodelist are empty"
+    return all([bool(node.queue_emptyq)==False for node in nodelist])
+
+def check_if_all_exhausted():
+    "Returns true when all nodes are exhausted"
+    return all([n.is_exhausted() for n in nodelist])
+
 #/Simulation/Loop
-def sim_loop(type_of_sim):
+def rnd_sim_loop():
     day = 0
-    end_condition = False
+    max_packets_per_day = len(nodelist)//2
+    simulation_length = 100
     datalog = ""
-
-    #/Simulation/Helper functs
-    def create_packet(sourcestr,recipientstr,load = 1,):
-        nonlocal packet_iter
-        name = f'{sourcestr},{recipientstr},{day},{packet_iter}'
-        packet_iter += 1
-        source = list(filter(lambda node:node.address==sourcestr,nodelist))[0]
-        recipient = list(filter(lambda node: node.address == recipientstr,nodelist))[0]
-        packet = Packet(name,recipient,source,day,load)
-        source.recieve_packet(packet)
-        return True
-
-    def check_all_node_queues_empty():
-        return not any(node.queue_emptyq() for node in nodelist)
-
-    def check_if_all_exhausted():
-        return all([n.is_exhausted() for n in nodelist])
 
     def new_day():
         #collect_notification flags form the map and write to file
@@ -114,29 +129,34 @@ def sim_loop(type_of_sim):
                 node.newday()
         #Increment day value
         nonlocal day
+        print(f"Ending day: {day}")
         day = day + 1
         return True
 
-    while True:
-        packet_iter = 0
 
-        if end_condition:
-            break
-        while not check_if_all_exhausted():
-            if check_all_node_queues_empty():
-                if type_of_sim == "introduction":
-                    try:
-                        source,destination = next(introduction_generator)
-                        create_packet(source,destination)
-                    except StopIteration:
-                        end_condition = True
-                elif type_of_sim == "random":
-                    end_condition = True
-                    break
+    while simulation_length > day:
+
+        #make packets
+        todays_packets = [next(rnd_packet_maker) for b in range(random.randrange(max_packets_per_day))]
+        #finalize packet details and deliver them to the starting node
+        packet_iter = 0
+        for packet in todays_packets:
+            packet.timecreated = day
+            packet.name += f',{packet_iter}'
+            packet_iter += 1
+            start_node = list(filter(lambda n: n.address == packet.source,nodelist))[0]
+            start_node.recieve_packet(packet)
+            print(start_node.packetqueue)
+            print(start_node.queue_emptyq())
+        
+        #nodes do work in sequence until they are all exhausted or have finished all their tasks
+        print(f'Check if all are exhausted {check_if_all_exhausted()}')
+        print(f'Check if all node queues are empty {check_all_node_queues_empty()}')
+        while not (check_if_all_exhausted() and check_all_node_queues_empty()):
+            print(f'Check if all node queues are empty {check_all_node_queues_empty()}')
             for node in nodelist:
                 node.process_one_item
         new_day()
-
     return datalog
 
 #Main Loop
@@ -149,10 +169,9 @@ while current_command != "exit":
     elif inp == "run_introduction":
         print("Running network introduction")
         network_introduction()
-        pass
     elif inp == "run_random":
-        #do things
-        pass
+        print("Running random packet simulation. Results will be output to file")
+        rnd_sim_loop()
     elif inp == "help":
         print_help()
     else:

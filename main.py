@@ -1,12 +1,26 @@
 from node import Node
 from packet import Packet
+import json
 
 nodelist = []
 
 #Initialize
 
 #simple node map for testing and debugging
-maplist = [{"name": "apple","neighbors": [("pear",4),("mango",3),("banana",2)]},{"name": "banana","neighbors": [("apple",2),("mango",3),("kiwi",1)]},{"name": "mango","neighbors": [("banana",2),("apple",3),("pear",2)]},{"name": "pear","neighbors": [("apple",4),("mango",2),("kiwi",1)]},{"name": "kiwi","neighbors": [("banana",1),("pear",1)]}]
+maplist = [
+    {"name": "apple",
+    "neighbors": [("pear",4),("mango",3),("banana",2)]},
+    {"name": "banana",
+    "neighbors": [("apple",2),("mango",3),("kiwi",1)]},
+    {"name": "mango",
+    "neighbors": [("banana",2),("apple",3),("pear",2)]},
+    {"name": "pear",
+    "neighbors": [("apple",4),("mango",2),("kiwi",1)]},
+    {"name": "kiwi",
+    "neighbors": [("banana",1),("pear",1)]}]
+
+def load_map_from_file(fname):
+    pass
 
 #/Initialize/Setup node map
 for item in maplist:
@@ -56,8 +70,10 @@ def network_introduction():
             for node in nodelist:
                 node.process_one_item()
     
+    #Report on how to get from any node to any other node with a node waypoint
     for node in nodelist:
-        print(node.networkaware_map)
+        for place,nextplace in node.networkaware_map.items():
+            print(f'To get from {node.address} to {place} you need to travel to {nextplace.address}')
         
 
 

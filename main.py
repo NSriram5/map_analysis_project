@@ -3,37 +3,67 @@ from packet import Packet
 import json
 import random
 
+
 nodelist = []
 
 #Initialize
 
 #simple node map for testing and debugging
-maplist = [
-    {"name": "apple",
-    "neighbors": [("pear",4),("mango",3),("banana",2)]},
-    {"name": "banana",
-    "neighbors": [("apple",2),("mango",3),("kiwi",1)]},
-    {"name": "mango",
-    "neighbors": [("banana",2),("apple",3),("pear",2)]},
-    {"name": "pear",
-    "neighbors": [("apple",4),("mango",2),("kiwi",1)]},
-    {"name": "kiwi",
-    "neighbors": [("banana",1),("pear",1)]}]
+# maplist = [
+#     {"name": "apple",
+#     "bandwidth":100,
+#     "neighbors": [("pear",4),("mango",3),("banana",2)]},
+#     {"name": "banana",
+#     "bandwidth":100,
+#     "neighbors": [("apple",2),("mango",3),("kiwi",1)]},
+#     {"name": "mango",
+#     "bandwidth":100,
+#     "neighbors": [("banana",2),("apple",3),("pear",2)]},
+#     {"name": "pear",
+#     "bandwidth":100,
+#     "neighbors": [("apple",4),("mango",2),("kiwi",1)]},
+#     {"name": "kiwi",
+#     "bandwidth":100,
+#     "neighbors": [("banana",1),("pear",1)]}]
 
 def load_map_from_file(fname):
-    pass
+    with open(fname,"r") as file:
+        material = file.read()
+    
+    #remove carriage returns
+    material = material.replace("\n","")
+    try:
+        maplist = json.loads(material)
+    except:
+        print("The text file could not be loaded. Ensure it is in json format.")
+    try:
+        define_nodelist(maplist)
+    except:
+        print("There was an issue with reading the map into a nodelist. Please check formatting.")
+
+def define_nodelist(maplist):
+    for item in maplist:
+        n = Node(addressname = item["name"],bandwidth = item["bandwidth"])
+        nodelist.append(n)
+    for node in nodelist:
+        for item in maplist:
+            if item["name"]==node.address:
+                for tup in item["neighbors"]:
+                    for tar_node in nodelist:
+                        if tar_node.address == tup[0]:
+                            node.assign_neighbor(tar_node,tup[1])
 
 #/Initialize/Setup node map
-for item in maplist:
-    n = Node(addressname = item["name"],bandwidth = 100)
-    nodelist.append(n)
-for node in nodelist:
-    for item in maplist:
-        if item["name"]==node.address:
-            for tup in item["neighbors"]:
-                for tar_node in nodelist:
-                    if tar_node.address == tup[0]:
-                        node.assign_neighbor(tar_node,tup[1])
+# for item in maplist:
+#     n = Node(addressname = item["name"],bandwidth = 100)
+#     nodelist.append(n)
+# for node in nodelist:
+#     for item in maplist:
+#         if item["name"]==node.address:
+#             for tup in item["neighbors"]:
+#                 for tar_node in nodelist:
+#                     if tar_node.address == tup[0]:
+#                         node.assign_neighbor(tar_node,tup[1])
 
 
 
@@ -45,8 +75,8 @@ def print_help():
     print('Here\'s a list of the current commands that function:')
     print('run_introduction')
     print(network_introduction.__doc__)
-    #print('Random Packet Simulation')
-    #print()
+    print('run_random')
+    print()
 
 #/Handle Commands/NetworkIntroduction
 def every_connect_generator():
@@ -115,6 +145,7 @@ def check_if_all_exhausted():
 
 #/Simulation/Loop
 def rnd_sim_loop():
+    "Runs a simulation of numerous days while generating a random set of packets each day"
     day = 0
     max_packets_per_day = len(nodelist)//2
     simulation_length = 100
@@ -162,17 +193,23 @@ def rnd_sim_loop():
 #Main Loop
 current_command = ""
 
-while current_command != "exit":
+while current_command.lower() != "exit":
     inp = input("Command Prompt (exit to quit; help to see list of commands): ")
     if inp == "exit":
         break
-    elif inp == "run_introduction":
+    elif inp.lower() == "run_introduction":
         print("Running network introduction")
         network_introduction()
-    elif inp == "run_random":
+    elif inp.lower() == "run_random":
         print("Running random packet simulation. Results will be output to file")
         rnd_sim_loop()
-    elif inp == "help":
+    elif inp.lower() == "help":
         print_help()
+    elif inp[0:5].lower() == "load ":
+        try_filename = inp[5:]
+        if try_filename[::-1][0:4] != "txt.":
+            print("That doesn't look like a txt file please enter a text file")
+        else:
+            load_map_from_file(try_filename)
     else:
         print("Command not recognized. Please use \"help\" if you're confused about commands")

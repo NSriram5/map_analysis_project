@@ -143,23 +143,27 @@ def check_if_all_exhausted():
     "Returns true when all nodes are exhausted"
     return all([n.is_exhausted() for n in nodelist])
 
+def check_all_exhausted_or_empty():
+    "Returns if a node either has no packets to process or is exhausted"
+    return all([(n.queue_emptyq()==False) or (not n.is_exhausted()) for n in nodelist])
+
 #/Simulation/Loop
 def rnd_sim_loop():
     "Runs a simulation of numerous days while generating a random set of packets each day"
     day = 0
-    max_packets_per_day = len(nodelist)//2
+    max_packets_per_day = len(nodelist)
     simulation_length = 100
     datalog = ""
 
     def new_day():
         #collect_notification flags form the map and write to file
+        nonlocal day
         with open("output.txt",'a') as file:
             for node in nodelist:
                 if node.notification != "":
-                    file.write(node.notification)
+                    file.write(f'Day: {day} ' + node.notification)
                 node.newday()
         #Increment day value
-        nonlocal day
         print(f"Ending day: {day}")
         day = day + 1
         return True
@@ -183,7 +187,7 @@ def rnd_sim_loop():
             print(start_node.queue_emptyq())
         
         #nodes do work in sequence until they are all exhausted or have finished all their tasks
-        while (not check_if_all_exhausted()) and (not check_all_node_queues_empty()):
+        while check_all_exhausted_or_empty():
             for node in nodelist:
                 node.process_one_item()
         new_day()

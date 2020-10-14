@@ -76,6 +76,8 @@ class Node:
                 self.packetqueue = self.packetqueue[0:i]+self.packetqueue[i+1:]
                 self.completedpackets.append(packet)
                 return True
+            elif (self.bandwidthtoday - packet.load<0)and (len(self.packetqueue)-1==i):
+                self.exhausted = True
         if len(self.packetqueue)>0 and self.bandwidthtoday == self.bandwidth:
             self.notification += "There might be a logjam with packets with me \n"
         return False
@@ -85,6 +87,7 @@ class Node:
         #the dawn of a new day capacity is reset
         self.bandwidthtoday = self.bandwidth
         self.notification = ""
+        self.exhausted = False
 
     #Simulation functionality
 #Done

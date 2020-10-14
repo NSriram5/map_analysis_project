@@ -137,7 +137,7 @@ rnd_packet_maker = random_packet_maker()
 
 def check_all_node_queues_empty():
     "Returns true when all queues in all the nodes of nodelist are empty"
-    return all([bool(node.queue_emptyq)==False for node in nodelist])
+    return all([bool(node.queue_emptyq())==False for node in nodelist])
 
 def check_if_all_exhausted():
     "Returns true when all nodes are exhausted"
@@ -164,6 +164,8 @@ def rnd_sim_loop():
         day = day + 1
         return True
 
+    for node in nodelist:
+        node.newday()
 
     while simulation_length > day:
 
@@ -181,12 +183,9 @@ def rnd_sim_loop():
             print(start_node.queue_emptyq())
         
         #nodes do work in sequence until they are all exhausted or have finished all their tasks
-        print(f'Check if all are exhausted {check_if_all_exhausted()}')
-        print(f'Check if all node queues are empty {check_all_node_queues_empty()}')
-        while not (check_if_all_exhausted() and check_all_node_queues_empty()):
-            print(f'Check if all node queues are empty {check_all_node_queues_empty()}')
+        while (not check_if_all_exhausted()) and (not check_all_node_queues_empty()):
             for node in nodelist:
-                node.process_one_item
+                node.process_one_item()
         new_day()
     return datalog
 

@@ -7,8 +7,6 @@ import random
 nodelist = []
 
 # Initialize
-
-
 def load_map_from_file(fname):
     '''\
     Given a txt filename, this function parses the text into a nodelist map'''
@@ -30,6 +28,9 @@ def load_map_from_file(fname):
 
 
 def define_nodelist(maplist):
+    '''\
+    Uses the items in a maplist to develop a list of nodes that's stored
+    in a global variable'''
     for item in maplist:
         n = Node(address_name=item["name"], bandwidth=item["bandwidth"])
         nodelist.append(n)
@@ -46,6 +47,8 @@ def define_nodelist(maplist):
 
 # /Handle Commands/Help
 def print_help():
+    '''\
+    Prints a brief introduction to the Node network map functions'''
     print('Here\'s a list of the current commands that function:')
 
     print('load [filename].txt')
@@ -54,10 +57,10 @@ def print_help():
     print('--'+network_introduction.__doc__)
     print('run_random')
     print('--'+rnd_sim_loop.__doc__)
+    print('exit')
+    print('--   Exits the utility')
 
 # /Handle Commands/NetworkIntroduction
-
-
 def every_connect_generator():
     '''A generator function that retuns a tuple of two different nodes'''
     for node1 in nodelist:
@@ -67,7 +70,6 @@ def every_connect_generator():
 
 
 introduction_generator = every_connect_generator()
-
 
 def network_introduction():
     '''\
@@ -85,13 +87,6 @@ def network_introduction():
         while not all([not bool(node.queue_emptyq()) for node in nodelist]):
             for node in nodelist:
                 node.process_one_item()
-
-    # Report on how to get from any node to any other node with a node waypoint
-    # for node in nodelist:
-    #     for place, nextplace in node.network_aware_map.items():
-    #         print(
-    #             f'To get from {node.address} to {place} you need to travel '+
-    #             f'to {nextplace.address}')
 
 
 SEED = 0
@@ -114,9 +109,7 @@ def random_packet_maker():
         packet = Packet(name, choice2.address, choice1.address, 0, load)
         yield packet
 
-
 rnd_packet_maker = random_packet_maker()
-
 
 def check_all_node_queues_empty():
     "Returns true when all queues in all the nodes of nodelist are empty"
@@ -134,8 +127,6 @@ def check_all_exhausted_or_empty():
     (not n.is_exhausted()) for n in nodelist])
 
 # /Simulation/Loop
-
-
 def rnd_sim_loop():
     '''\
     Runs a simulation of numerous days while generating a random set of 
@@ -152,24 +143,22 @@ def rnd_sim_loop():
             for node in nodelist:
                 if node.notification != "":
                     file.write(f'Day: {day} ' + node.notification)
-                node.newday()
+                node.new_day()
         # Increment day value
-        # print(f"Ending day: {day}")
         day = day + 1
         return True
 
     for node in nodelist:
-        node.newday()
+        node.new_day()
 
     while simulation_length > day:
-
         # make packets
         todays_packets = [next(rnd_packet_maker)
-                          for b in range(random.randrange(max_packets_per_day))]
+                        for b in range(random.randrange(max_packets_per_day))]
         # finalize packet details and deliver them to the starting node
         packet_iter = 0
         for packet in todays_packets:
-            packet.timecreated = day
+            packet.time_created = day
             packet.name += f',{packet_iter}'
             packet_iter += 1
             start_node = list(filter(lambda n: n.address ==
@@ -207,4 +196,5 @@ while current_command.lower() != "exit":
             load_map_from_file(try_filename)
     else:
         print(
-            "Command not recognized. Please use \"help\" if you're confused about commands")
+        "Command not recognized. Please use \"help\" if you're confused" +
+        "about commands")

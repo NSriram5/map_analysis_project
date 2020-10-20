@@ -24,16 +24,17 @@ class Node:
         self.operating = True
         self.notification = ""
 
-        #TODO define a private variable
-        #self.__private = something
-
     #Setup functionality
     def assign_neighbor(self,neighbor,distance):
+        '''\
+        Assigns a neighbor to a node after the nodes have been created'''
         self.neighbors[neighbor.address] = (neighbor,distance)
 
     #Change functionality
     def remove_neighbor(self,neighbor):
-       self.neighbors.pop(neighbor)    
+        '''\
+        Removes a neighbor from a node after the node has been created'''
+        self.neighbors.pop(neighbor)    
 
     #Operations functionality
     def recieve_packet(self, packet):
@@ -71,8 +72,11 @@ class Node:
                 len(self.__packet_queue)>0):
             self.exhausted = not self.process_one_item()
 
-#Done
     def process_one_item(self):
+        '''\
+        Processes one item in the queue of the node. The node will start with
+        processing packets that are at the bottom of the queue, but will skip
+        ones if it doesn't have enough current bandwidth'''
         for i in range(0,len(self.__packet_queue)):
             packet = self.__packet_queue[i]
             if self.bandwidth_today - packet.load >= 0:
@@ -105,30 +109,42 @@ class Node:
                                 (len(self.__packet_queue)-1==i)):
                 self.exhausted = True
         if (len(self.__packet_queue)>0 and self.bandwidth_today == 
-                                                                self.bandwidth):
-            self.notification += "There might be a logjam with packets with me \n"
+                                                            self.bandwidth):
+            self.notification += ("There might be a logjam with packets "+
+                                                            "with me \n")
         return False
 
-#Done
-    def newday(self):
-        #the dawn of a new day capacity is reset
+
+    def new_day(self):
+        '''\
+        Resets the variables for a node given a bandwidth timecycle'''
         self.bandwidth_today = self.bandwidth
         self.notification = ""
         self.exhausted = False
 
     #Simulation functionality
-#Done
+
     def set_disable(self):
+        '''\
+        Disables the node so that the network map can be tested for node
+        interruptions'''
         self.operating = False
 
-#Done
     def set_enable(self):
+        '''\
+        Enables a disabled the node so that the network map can be tested for 
+        node disruptions'''
         self.operating = True
     
     def queue_emptyq(self):
+        '''\
+        Returns the length of the packet queue belonging to the node'''
         return len(self.__packet_queue)
 
     def is_exhausted(self):
+        '''\
+        Returns true if the node is exhausted (having not enough bandwith
+        to process anymore Packets'''
         return self.exhausted
 
 if __name__ == "__main__":
